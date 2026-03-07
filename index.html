@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Estimator Selection Guide</title>
+    <style>
+      :root {
+        --bg: #f4efe6;
+        --panel: rgba(255, 251, 245, 0.88);
+        --panel-strong: #fffaf2;
+        --text: #1f1c18;
+        --muted: #675d52;
+        --line: rgba(78, 59, 35, 0.14);
+        --accent: #c65d2e;
+        --accent-strong: #8f2f12;
+        --accent-soft: rgba(198, 93, 46, 0.12);
+        --shadow: 0 24px 60px rgba(68, 42, 16, 0.12);
+        --radius: 24px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Hiragino Sans", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(255, 202, 146, 0.45), transparent 32%),
+          radial-gradient(circle at right 20%, rgba(197, 93, 46, 0.18), transparent 28%),
+          linear-gradient(180deg, #f8f3ea 0%, var(--bg) 52%, #efe5d8 100%);
+      }
+
+      .shell {
+        width: min(980px, calc(100% - 32px));
+        margin: 28px auto 48px;
+        display: grid;
+        gap: 24px;
+      }
+
+      .hero,
+      .panel,
+      .result-modal {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(14px);
+      }
+
+      .hero {
+        padding: 32px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: auto -80px -80px auto;
+        width: 240px;
+        height: 240px;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(198, 93, 46, 0.28), transparent 65%);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-size: 0.82rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 18px 0 12px;
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        line-height: 0.9;
+        letter-spacing: -0.04em;
+        /* max-width: 16ch; */
+      }
+
+      .hero p {
+        margin: 0;
+        max-width: 62ch;
+        color: var(--muted);
+        font-size: 1.02rem;
+        line-height: 1.75;
+      }
+
+      .panel {
+        padding: 32px;
+      }
+
+      .panel h2,
+      .panel h3 {
+        margin: 0 0 10px;
+      }
+
+      .subtle {
+        margin: 0 0 22px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .question-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        font-size: 0.84rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent-strong);
+      }
+
+      .question-step {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: #fffaf2;
+        font-weight: 700;
+        letter-spacing: normal;
+      }
+
+      .question {
+        font-size: clamp(1.5rem, 3.2vw, 2rem);
+        line-height: 1.25;
+        margin-bottom: 16px;
+        max-width: 100%;
+      }
+
+      .options {
+        display: grid;
+        gap: 14px;
+      }
+
+      .option {
+        width: 100%;
+        text-align: left;
+        border: 1px solid var(--line);
+        background: var(--panel-strong);
+        border-radius: 22px;
+        padding: 22px 20px 20px;
+        color: var(--text);
+        cursor: pointer;
+        transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .option:hover,
+      .option:focus-visible {
+        transform: translateY(-4px) scale(1.01);
+        border-color: rgba(198, 93, 46, 0.4);
+        background: #fff7ef;
+        box-shadow: 0 16px 30px rgba(143, 47, 18, 0.1);
+        outline: none;
+      }
+
+      .option::after {
+        content: "";
+        position: absolute;
+        inset: auto -20px -50px auto;
+        width: 120px;
+        height: 120px;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(198, 93, 46, 0.14), transparent 65%);
+        transition: transform 180ms ease;
+      }
+
+      .option:hover::after,
+      .option:focus-visible::after {
+        transform: scale(1.1);
+      }
+
+      .option strong {
+        display: block;
+        font-size: 1.08rem;
+        margin-bottom: 8px;
+      }
+
+      .option span {
+        display: block;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.94rem;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 22px;
+        flex-wrap: wrap;
+      }
+
+      .ghost {
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--text);
+      }
+
+      .primary,
+      .ghost {
+        border-radius: 999px;
+        padding: 11px 16px;
+        cursor: pointer;
+        font: inherit;
+      }
+
+      .primary {
+        border: none;
+        background: var(--accent);
+        color: #fff7f3;
+      }
+
+      .result-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        padding: 7px 11px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-size: 0.84rem;
+      }
+
+      .cards {
+        display: grid;
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        background: rgba(255, 255, 255, 0.68);
+      }
+
+      .card h4 {
+        margin: 0 0 8px;
+        font-size: 1.05rem;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .card .card-action {
+        margin-top: 14px;
+      }
+
+      .mini {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff8f1;
+        color: var(--text);
+        padding: 8px 12px;
+        font: inherit;
+        cursor: pointer;
+      }
+
+      .note-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .note {
+        padding: 14px 16px;
+        border-left: 4px solid var(--accent);
+        border-radius: 12px;
+        background: rgba(198, 93, 46, 0.08);
+        color: var(--text);
+        line-height: 1.7;
+      }
+
+      .empty {
+        color: var(--muted);
+        line-height: 1.8;
+      }
+
+      .qa-stage {
+        display: grid;
+        gap: 18px;
+      }
+
+      .progress-card {
+        display: grid;
+        gap: 10px;
+        padding: 18px 20px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: rgba(255, 250, 242, 0.72);
+      }
+
+      .progress-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .progress-bar {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(31, 28, 24, 0.08);
+        overflow: hidden;
+      }
+
+      .progress-value {
+        height: 100%;
+        width: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #d37a42, #b6461f);
+        transition: width 220ms ease;
+      }
+
+      .result-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(31, 28, 24, 0.35);
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .result-overlay[hidden] {
+        display: none;
+      }
+
+      .result-modal {
+        width: min(820px, 100%);
+        max-height: min(88vh, 920px);
+        overflow: auto;
+        padding: 28px;
+      }
+
+      .code-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(18, 15, 12, 0.46);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 30;
+      }
+
+      .code-overlay[hidden] {
+        display: none;
+      }
+
+      .code-modal {
+        width: min(920px, 100%);
+        max-height: min(90vh, 980px);
+        overflow: auto;
+        padding: 24px;
+        background: #fffdf8;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+      }
+
+      .code-modal pre {
+        margin: 14px 0 0;
+        padding: 16px;
+        border-radius: 14px;
+        overflow: auto;
+        background: #1f1b16;
+        color: #f8efe2;
+        line-height: 1.55;
+        font-size: 0.92rem;
+      }
+
+      .code-modal code {
+        font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+      }
+
+      @media (max-width: 900px) {
+        .hero,
+        .panel,
+        .result-modal {
+          padding: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div class="eyebrow">scikit-learn estimator selection</div>
+        <h1>sk-learn分析モデルガイド</h1>
+        <p>
+          質問に答えるだけで、条件に合うモデル候補を絞り込みます。
+        </p>
+      </section>
+
+      <section class="panel">
+        <div class="qa-stage">
+          <div class="progress-card">
+            <div class="progress-row">
+              <span id="progress-text">質問 1 / 5</span>
+            </div>
+            <div class="progress-bar">
+              <div id="progress-value" class="progress-value"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="question-label">
+              <span id="question-step" class="question-step">Q1</span>
+              <span>質問</span>
+            </div>
+            <div id="question" class="question"></div>
+            <p id="question-help" class="subtle"></p>
+          </div>
+
+          <div id="options" class="options"></div>
+
+          <div class="actions">
+            <button id="back" class="ghost" type="button">戻る</button>
+            <button id="reset" class="ghost" type="button">最初から</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="result-overlay" class="result-overlay" hidden>
+      <section class="result-modal">
+        <div id="result-empty" class="empty" hidden>
+          左の質問に答えると、ここに候補モデルと補足が表示されます。
+        </div>
+
+        <div id="result">
+          <div class="result-header">
+            <div>
+              <h2 id="result-title"></h2>
+              <p id="result-summary" class="subtle"></p>
+            </div>
+            <div id="result-badge" class="badge"></div>
+          </div>
+          <div id="cards" class="cards"></div>
+          <div id="notes" class="note-list"></div>
+          <div class="actions">
+            <button id="close-result" class="ghost" type="button">戻る</button>
+            <button id="restart-result" class="primary" type="button">もう一度診断する</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="code-overlay" class="code-overlay" hidden>
+      <section class="code-modal">
+        <div class="result-header">
+          <div>
+            <h3 id="code-title">サンプルコード</h3>
+            <p id="code-subtitle" class="subtle"></p>
+          </div>
+          <button id="close-code" class="ghost" type="button">閉じる</button>
+        </div>
+        <pre><code id="code-body"></code></pre>
+      </section>
+    </div>
+
+    <script>
+      const results = {
+        needMoreData: {
+          title: "まずはデータ追加を優先",
+          badge: "50 samples or fewer",
+          summary:
+            "サンプル数が 50 件以下なら、モデル選定より先にデータを増やす判断が推奨です。",
+          cards: [
+            {
+              name: "データ収集・ラベル整備",
+              reason: "この段階ではアルゴリズム差よりも、データ量不足による不安定さの影響が大きくなります。",
+            },
+          ],
+          notes: [
+            "特徴量設計や前処理の見直しも有効ですが、まずはサンプル数の底上げを優先してください。",
+            "少量データで無理に最適化するより、追加データ取得後に複数モデルを比較した方が再現性が出やすいです。",
+          ],
+        },
+        classificationText: {
+          title: "テキスト分類の初期候補",
+          badge: "教師あり / 分類",
+          summary:
+            "まず試しやすい候補です。",
+          cards: [
+            { name: "Naive Bayes", reason: "テキスト分類の強いベースラインになりやすく、軽量です。" },
+            { name: "Linear SVC", reason: "高次元テキストでも安定した性能を出しやすい線形分類器です。" },
+            { name: "SGDClassifier", reason: "サンプルが多い場合でも計算効率を確保しやすい選択肢です。" },
+          ],
+          notes: [
+            "BoW や TF-IDF と組み合わせて比較するのが実務上の定番です。",
+            "テキスト分類ではまず 2〜3 モデルを同一前処理で並べて評価してください。",
+          ],
+        },
+        classificationSmall: {
+          title: "小〜中規模の分類候補",
+          badge: "分類 / 10万件未満",
+          summary:
+            "比較しやすい候補をまとめています。",
+          cards: [
+            { name: "SVC", reason: "中規模データで強力なベースラインになりやすい分類器です。" },
+            { name: "KNeighborsClassifier", reason: "局所構造が効く問題で有効なことがあります。" },
+            { name: "Ensemble Classifiers", reason: "非線形関係を拾いやすく、汎用性があります。" },
+            { name: "Linear SVC", reason: "高速で安定した線形ベースラインとして使いやすいです。" },
+            { name: "Naive Bayes", reason: "特徴が条件付き独立に近い場合や軽量比較用に向いています。" },
+          ],
+          notes: [
+            "SVM、k近傍法、線形系は標準化の影響が大きいので、前処理をセットで比較してください。",
+            "実務では RandomForest 系や LogisticRegression 系もベースラインに加えると判断しやすくなります。",
+          ],
+        },
+        classificationLarge: {
+          title: "大規模分類の候補",
+          badge: "分類 / 10万件以上",
+          summary:
+            "大規模データで試しやすい候補です。",
+          cards: [
+            { name: "SGDClassifier", reason: "大規模データに対応しやすく、学習コストを抑えやすいです。" },
+            { name: "Linear SVC", reason: "線形境界で十分な場合の強いベースラインです。" },
+          ],
+          notes: [
+            "特徴量数が多い場合でも扱いやすいため、まずこの 2 つから比較を始めるのが現実的です。",
+            "評価指標の偏りがあるときは class_weight やしきい値調整も検討してください。",
+          ],
+        },
+        regressionSparse: {
+          title: "重要特徴が少なそうな回帰",
+          badge: "回帰 / 特徴量を絞りたい",
+          summary:
+            "特徴量を絞り込みやすい候補です。",
+          cards: [
+            { name: "Lasso", reason: "不要な特徴量を 0 に寄せやすく、特徴選択的に働きます。" },
+            { name: "ElasticNet", reason: "相関した特徴量があるときも安定しやすい折衷案です。" },
+          ],
+          notes: [
+            "特徴量選択の解釈も欲しい場合に特に相性が良い分岐です。",
+            "標準化を入れずに係数解釈をすると比較が歪みやすい点に注意してください。",
+          ],
+        },
+        regressionSmall: {
+          title: "一般的な回帰の候補",
+          badge: "回帰 / 10万件未満",
+          summary:
+            "まず比較しやすい候補です。",
+          cards: [
+            { name: "RidgeRegression", reason: "まず線形回帰系の安定した基準点として置きやすいです。" },
+            { name: 'SVR (kernel="linear")', reason: "線形だが margin ベースで解きたい場合の候補です。" },
+            { name: 'SVR (kernel="rbf")', reason: "非線形性がありそうなときの代表候補です。" },
+            { name: "Ensemble Regressors", reason: "複雑な非線形関係を拾いやすい回帰候補です。" },
+          ],
+          notes: [
+            "まず Ridge を置いて、そこから非線形候補を追加すると比較軸が明確になります。",
+            "実務では RandomForestRegressor や GradientBoosting 系も同列で試すと判断しやすいです。",
+          ],
+        },
+        regressionLarge: {
+          title: "大規模回帰の候補",
+          badge: "回帰 / 10万件以上",
+          summary:
+            "大規模データ向けの候補です。",
+          cards: [
+            { name: "SGDRegressor", reason: "大規模データでも学習しやすいオンライン寄りの回帰器です。" },
+          ],
+          notes: [
+            "学習率や正則化の影響を受けやすいため、標準化と検証セットは必須です。",
+            "完全な最終候補ではなく、大規模データ向けの初期ベースラインとして扱ってください。",
+          ],
+        },
+        clusteringKnownSmall: {
+          title: "クラスター数が分かるクラスタリング",
+          badge: "クラスタリング / 既知 / 1万件未満",
+          summary:
+            "まず試しやすい候補です。",
+          cards: [
+            { name: "KMeans", reason: "クラスター数が決まっている場合の標準的な出発点です。" },
+          ],
+          notes: [
+            "特徴量スケールの影響を受けやすいので、距離ベースで使う前に標準化を検討してください。",
+            "初期値依存を避けるため、複数回初期化で安定性を確認すると良いです。",
+          ],
+        },
+        clusteringKnownLarge: {
+          title: "大規模クラスタリング",
+          badge: "クラスタリング / 既知 / 1万件以上",
+          summary:
+            "大規模データ向けの候補です。",
+          cards: [
+            { name: "MiniBatch KMeans", reason: "サンプル数が多い状況でもスケールしやすい近似版です。" },
+            { name: "KMeans", reason: "精度比較用の基準として、一部サンプルで試す価値があります。" },
+          ],
+          notes: [
+            "速度重視の分岐なので、最終的にはクラスタ品質指標と可視化で確認してください。",
+            "大規模でも特徴空間が粗い場合は、前処理や次元削減の併用が効きます。",
+          ],
+        },
+        clusteringUnknownSmall: {
+          title: "クラスター数が未知の候補",
+          badge: "クラスタリング / 未知 / 1万件未満",
+          summary:
+            "複数の見方で試しやすい候補です。",
+          cards: [
+            { name: "MeanShift", reason: "クラスター数を事前指定せずに密度ベースで探れます。" },
+            { name: "Spectral Clustering", reason: "非球状の構造を拾いたい場合に候補になります。" },
+            { name: "Gaussian Mixture Model", reason: "確率分布としてクラスターを表現したい場合に向いています。" },
+          ],
+          notes: [
+            "この分岐は手法ごとの仮定差が大きいので、可視化や内部評価指標の確認が重要です。",
+            "1万件未満でも計算負荷が高くなりやすいため、まず部分集合で挙動を見るのが安全です。",
+          ],
+        },
+        clusteringUnknownLarge: {
+          title: "大規模でクラスター数未知",
+          badge: "クラスタリング / 未知 / 1万件以上",
+          summary:
+            "大規模データでの出発点になる候補です。",
+          cards: [
+            { name: "MiniBatch KMeans", reason: "候補数を仮置きして大規模データを探索する現実的な入口です。" },
+            { name: "Gaussian Mixture Model", reason: "サンプルや特徴量を絞って分布仮定を確認する補助候補です。" },
+          ],
+          notes: [
+            "クラスター数未知かつ大規模では、厳密な一発解より探索的な比較手順が必要です。",
+            "候補数を変えながら silhouette score などであたりを付ける運用が現実的です。",
+          ],
+        },
+        dimensionalityReduction: {
+          title: "次元削減の候補",
+          badge: "教師なし / 次元削減",
+          summary:
+            "圧縮や可視化で使いやすい候補です。",
+          cards: [
+            { name: "Randomized PCA", reason: "まず標準的に圧縮したいときの入口です。" },
+            { name: "LLE", reason: "局所的な非線形構造を保ちながら埋め込みたい場合に向きます。" },
+            { name: "Isomap", reason: "測地距離ベースで低次元構造を見たい場合の候補です。" },
+            { name: "Spectral Embedding", reason: "グラフ構造として近傍関係を反映したい場合に使えます。" },
+            { name: "Kernel Approximation", reason: "大規模でカーネル法を軽く近似したいときの補助候補です。" },
+          ],
+          notes: [
+            "まず無難に始めるなら PCA 系、その後に非線形構造が重要かを検証する流れが扱いやすいです。",
+            "可視化目的と下流タスクの前処理目的では、良い埋め込みの条件が変わる点に注意してください。",
+          ],
+        },
+      };
+
+      const nodes = {
+        samples: {
+          label: "Q1",
+          text: "サンプル数は 50 件を超えていますか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "50件を超える", detail: "", next: "labeled" },
+            { label: "50件以下", detail: "", result: "needMoreData" },
+          ],
+        },
+        labeled: {
+          label: "Q2",
+          text: "ラベル付きデータはありますか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "ある", detail: "", next: "supervisedType" },
+            { label: "ない", detail: "", next: "unsupervisedGoal" },
+          ],
+        },
+        supervisedType: {
+          label: "Q3",
+          text: "予測したいのはカテゴリですか、それとも数値ですか？",
+          help: "目的に近い方を選んでください。",
+          options: [
+            { label: "カテゴリを予測したい", detail: "", next: "classificationText" },
+            { label: "数値を予測したい", detail: "", next: "regressionSparse" },
+          ],
+        },
+        classificationText: {
+          label: "Q4",
+          text: "扱うデータはテキストですか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "テキスト", detail: "", result: "classificationText" },
+            { label: "テキスト以外", detail: "", next: "classificationScale" },
+          ],
+        },
+        classificationScale: {
+          label: "Q5",
+          text: "サンプル数は 10万件 未満ですか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "10万件未満", detail: "", result: "classificationSmall" },
+            { label: "10万件以上", detail: "", result: "classificationLarge" },
+          ],
+        },
+        regressionSparse: {
+          label: "Q4",
+          text: "重要な特徴量は少なそうですか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "少なそう", detail: "", result: "regressionSparse" },
+            { label: "そうでもない", detail: "", next: "regressionScale" },
+          ],
+        },
+        regressionScale: {
+          label: "Q5",
+          text: "サンプル数は 10万件 未満ですか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "10万件未満", detail: "", result: "regressionSmall" },
+            { label: "10万件以上", detail: "", result: "regressionLarge" },
+          ],
+        },
+        unsupervisedGoal: {
+          label: "Q3",
+          text: "やりたいのは構造発見ですか、それとも圧縮・可視化ですか？",
+          help: "目的に近い方を選んでください。",
+          options: [
+            { label: "構造を見つけたい", detail: "", next: "clusterCountKnown" },
+            { label: "圧縮・可視化したい", detail: "", result: "dimensionalityReduction" },
+          ],
+        },
+        clusterCountKnown: {
+          label: "Q4",
+          text: "クラスター数は分かっていますか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "分かっている", detail: "", next: "clusterKnownScale" },
+            { label: "分からない", detail: "", next: "clusterUnknownScale" },
+          ],
+        },
+        clusterKnownScale: {
+          label: "Q5",
+          text: "サンプル数は 1万件 未満ですか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "1万件未満", detail: "", result: "clusteringKnownSmall" },
+            { label: "1万件以上", detail: "", result: "clusteringKnownLarge" },
+          ],
+        },
+        clusterUnknownScale: {
+          label: "Q5",
+          text: "サンプル数は 1万件 未満ですか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "1万件未満", detail: "", result: "clusteringUnknownSmall" },
+            { label: "1万件以上", detail: "", result: "clusteringUnknownLarge" },
+          ],
+        },
+      };
+
+      const questionEl = document.getElementById("question");
+      const helpEl = document.getElementById("question-help");
+      const optionsEl = document.getElementById("options");
+      const backButton = document.getElementById("back");
+      const resetButton = document.getElementById("reset");
+      const resultEmptyEl = document.getElementById("result-empty");
+      const resultOverlayEl = document.getElementById("result-overlay");
+      const resultEl = document.getElementById("result");
+      const resultTitleEl = document.getElementById("result-title");
+      const resultSummaryEl = document.getElementById("result-summary");
+      const resultBadgeEl = document.getElementById("result-badge");
+      const cardsEl = document.getElementById("cards");
+      const notesEl = document.getElementById("notes");
+      const restartResultButton = document.getElementById("restart-result");
+      const closeResultButton = document.getElementById("close-result");
+      const codeOverlayEl = document.getElementById("code-overlay");
+      const closeCodeButton = document.getElementById("close-code");
+      const codeTitleEl = document.getElementById("code-title");
+      const codeSubtitleEl = document.getElementById("code-subtitle");
+      const codeBodyEl = document.getElementById("code-body");
+      const progressTextEl = document.getElementById("progress-text");
+      const progressValueEl = document.getElementById("progress-value");
+      const questionStepEl = document.getElementById("question-step");
+
+      const state = {
+        currentNode: "samples",
+        history: [],
+      };
+
+      const totalSteps = 5;
+
+      const codeSnippets = {
+          "Naive Bayes": `from sklearn.pipeline import make_pipeline
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+
+model = make_pipeline(
+    TfidfVectorizer(),
+    MultinomialNB()
+)
+model.fit(X_train_text, y_train)
+pred = model.predict(X_valid_text)`,
+          "Linear SVC": `from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import LinearSVC
+
+model = make_pipeline(
+    StandardScaler(with_mean=False),
+    LinearSVC()
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+          SGDClassifier: `from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import SGDClassifier
+
+model = make_pipeline(
+    StandardScaler(with_mean=False),
+    SGDClassifier(random_state=42)
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+          SVC: `from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+
+model = make_pipeline(
+    StandardScaler(),
+    SVC()
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+          KNeighborsClassifier: `from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+
+model = make_pipeline(
+    StandardScaler(),
+    KNeighborsClassifier(n_neighbors=5)
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+          "Ensemble Classifiers": `from sklearn.ensemble import RandomForestClassifier
+
+model = RandomForestClassifier(
+    n_estimators=300,
+    random_state=42
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+          Lasso: `from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import Lasso
+
+model = make_pipeline(
+    StandardScaler(),
+    Lasso(alpha=0.1, random_state=42)
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+          ElasticNet: `from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import ElasticNet
+
+model = make_pipeline(
+    StandardScaler(),
+    ElasticNet(alpha=0.1, l1_ratio=0.5, random_state=42)
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+          RidgeRegression: `from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import Ridge
+
+model = make_pipeline(
+    StandardScaler(),
+    Ridge(alpha=1.0)
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+          'SVR (kernel="linear")': `from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVR
+
+model = make_pipeline(
+    StandardScaler(),
+    SVR(kernel="linear")
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+          'SVR (kernel="rbf")': `from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVR
+
+model = make_pipeline(
+    StandardScaler(),
+    SVR(kernel="rbf", C=10.0, gamma="scale")
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+          "Ensemble Regressors": `from sklearn.ensemble import RandomForestRegressor
+
+model = RandomForestRegressor(
+    n_estimators=300,
+    random_state=42
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+          SGDRegressor: `from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import SGDRegressor
+
+model = make_pipeline(
+    StandardScaler(),
+    SGDRegressor(random_state=42)
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+          KMeans: `from sklearn.cluster import KMeans
+
+model = KMeans(
+    n_clusters=3,
+    random_state=42,
+    n_init="auto"
+)
+labels = model.fit_predict(X)`,
+          "MiniBatch KMeans": `from sklearn.cluster import MiniBatchKMeans
+
+model = MiniBatchKMeans(
+    n_clusters=3,
+    random_state=42,
+    batch_size=1024
+)
+labels = model.fit_predict(X)`,
+          MeanShift: `from sklearn.cluster import MeanShift
+
+model = MeanShift()
+labels = model.fit_predict(X)`,
+          "Spectral Clustering": `from sklearn.cluster import SpectralClustering
+
+model = SpectralClustering(
+    n_clusters=3,
+    random_state=42,
+    affinity="nearest_neighbors"
+)
+labels = model.fit_predict(X)`,
+          "Gaussian Mixture Model": `from sklearn.mixture import GaussianMixture
+
+model = GaussianMixture(
+    n_components=3,
+    random_state=42
+)
+labels = model.fit_predict(X)`,
+          "Randomized PCA": `from sklearn.decomposition import PCA
+
+model = PCA(
+    n_components=2,
+    svd_solver="randomized",
+    random_state=42
+)
+X_reduced = model.fit_transform(X)`,
+          LLE: `from sklearn.manifold import LocallyLinearEmbedding
+
+model = LocallyLinearEmbedding(
+    n_components=2,
+    n_neighbors=10
+)
+X_reduced = model.fit_transform(X)`,
+          Isomap: `from sklearn.manifold import Isomap
+
+model = Isomap(
+    n_components=2,
+    n_neighbors=10
+)
+X_reduced = model.fit_transform(X)`,
+          "Spectral Embedding": `from sklearn.manifold import SpectralEmbedding
+
+model = SpectralEmbedding(
+    n_components=2,
+    n_neighbors=10,
+    random_state=42
+)
+X_reduced = model.fit_transform(X)`,
+          "Kernel Approximation": `from sklearn.kernel_approximation import RBFSampler
+from sklearn.linear_model import SGDClassifier
+from sklearn.pipeline import make_pipeline
+
+model = make_pipeline(
+    RBFSampler(gamma=1.0, random_state=42),
+    SGDClassifier(random_state=42)
+)
+model.fit(X_train, y_train)
+pred = model.predict(X_valid)`,
+      };
+
+      function getCodeSnippet(modelName) {
+        return codeSnippets[modelName];
+      }
+
+      function hasCodeSnippet(modelName) {
+        return Object.prototype.hasOwnProperty.call(codeSnippets, modelName);
+      }
+
+      function openCodeModal(modelName) {
+        codeTitleEl.textContent = `${modelName} のサンプルコード`;
+        codeSubtitleEl.textContent = "最小構成の例です。変数名は実データに合わせて置き換えてください。";
+        codeBodyEl.textContent = getCodeSnippet(modelName);
+        codeOverlayEl.hidden = false;
+      }
+
+      function closeCodeModal() {
+        codeOverlayEl.hidden = true;
+      }
+
+      function renderQuestion() {
+        const node = nodes[state.currentNode];
+        questionStepEl.textContent = node.label;
+        questionEl.textContent = node.text;
+        helpEl.textContent = node.help;
+        optionsEl.innerHTML = "";
+
+        node.options.forEach((option, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "option";
+          button.innerHTML = option.detail
+            ? `<strong>${option.label}</strong><span>${option.detail}</span>`
+            : `<strong>${option.label}</strong>`;
+          button.addEventListener("click", () => chooseOption(index));
+          optionsEl.appendChild(button);
+        });
+
+        backButton.disabled = state.history.length === 0;
+        renderProgress();
+      }
+
+      function renderProgress() {
+        const current = Math.min(state.history.length + 1, totalSteps);
+        progressTextEl.textContent = `質問 ${current} / ${totalSteps}`;
+        progressValueEl.style.width = `${(current / totalSteps) * 100}%`;
+      }
+
+      function renderResult(resultId) {
+        const result = results[resultId];
+        resultEmptyEl.hidden = true;
+        resultEl.hidden = false;
+        resultOverlayEl.hidden = false;
+        resultTitleEl.textContent = result.title;
+        resultSummaryEl.textContent = result.summary;
+        resultBadgeEl.textContent = result.badge;
+        cardsEl.innerHTML = "";
+        notesEl.innerHTML = "";
+        notesEl.hidden = true;
+
+        result.cards.forEach((card) => {
+          const article = document.createElement("article");
+          article.className = "card";
+          article.innerHTML = `<h4>${card.name}</h4><p>${card.reason}</p>`;
+          if (hasCodeSnippet(card.name)) {
+            const action = document.createElement("div");
+            action.className = "card-action";
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "mini";
+            button.textContent = "サンプルコード";
+            button.addEventListener("click", () => openCodeModal(card.name));
+            action.appendChild(button);
+            article.appendChild(action);
+          }
+          cardsEl.appendChild(article);
+        });
+      }
+
+      function clearResult() {
+        resultOverlayEl.hidden = true;
+        closeCodeModal();
+      }
+
+      function chooseOption(index) {
+        const node = nodes[state.currentNode];
+        const choice = node.options[index];
+
+        state.history.push({
+          nodeId: state.currentNode,
+          choice: choice.label,
+        });
+
+        if (choice.result) {
+          renderResult(choice.result);
+          return;
+        }
+
+        state.currentNode = choice.next;
+        clearResult();
+        renderQuestion();
+      }
+
+      function goBack() {
+        if (state.history.length === 0) {
+          return;
+        }
+
+        const last = state.history.pop();
+        state.currentNode = last.nodeId;
+        clearResult();
+        renderQuestion();
+      }
+
+      function resetFlow() {
+        state.currentNode = "samples";
+        state.history = [];
+        clearResult();
+        renderQuestion();
+      }
+
+      backButton.addEventListener("click", goBack);
+      resetButton.addEventListener("click", resetFlow);
+      restartResultButton.addEventListener("click", resetFlow);
+      closeResultButton.addEventListener("click", clearResult);
+      closeCodeButton.addEventListener("click", closeCodeModal);
+      resultOverlayEl.addEventListener("click", (event) => {
+        if (event.target === resultOverlayEl) {
+          clearResult();
+        }
+      });
+      codeOverlayEl.addEventListener("click", (event) => {
+        if (event.target === codeOverlayEl) {
+          closeCodeModal();
+        }
+      });
+
+      renderQuestion();
+    </script>
+  </body>
+</html>
