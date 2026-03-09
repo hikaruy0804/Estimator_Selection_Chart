@@ -303,39 +303,6 @@
         gap: 18px;
       }
 
-      .progress-card {
-        display: grid;
-        gap: 10px;
-        padding: 18px 20px;
-        border: 1px solid var(--line);
-        border-radius: 20px;
-        background: rgba(255, 250, 242, 0.72);
-      }
-
-      .progress-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        color: var(--muted);
-        font-size: 0.92rem;
-      }
-
-      .progress-bar {
-        height: 10px;
-        border-radius: 999px;
-        background: rgba(31, 28, 24, 0.08);
-        overflow: hidden;
-      }
-
-      .progress-value {
-        height: 100%;
-        width: 0;
-        border-radius: inherit;
-        background: linear-gradient(90deg, #d37a42, #b6461f);
-        transition: width 220ms ease;
-      }
-
       .result-overlay {
         position: fixed;
         inset: 0;
@@ -421,15 +388,6 @@
 
       <section class="panel">
         <div class="qa-stage">
-          <div class="progress-card">
-            <div class="progress-row">
-              <span id="progress-text">質問 1 / 5</span>
-            </div>
-            <div class="progress-bar">
-              <div id="progress-value" class="progress-value"></div>
-            </div>
-          </div>
-
           <div>
             <div class="question-label">
               <span id="question-step" class="question-step">Q1</span>
@@ -490,181 +448,166 @@
       const results = {
         needMoreData: {
           title: "まずはデータ追加を優先",
-          badge: "50 samples or fewer",
+          badge: "50件以下",
           summary:
-            "サンプル数が 50 件以下なら、モデル選定より先にデータを増やす判断が推奨です。",
+            "公式チャートでは、まずデータを増やすことが勧められています。",
           cards: [
             {
-              name: "データ収集・ラベル整備",
-              reason: "この段階ではアルゴリズム差よりも、データ量不足による不安定さの影響が大きくなります。",
+              name: "get more data",
+              reason: "サンプル数が少なすぎるため、推定器の比較より先にデータ追加を行う流れです。",
             },
           ],
-          notes: [
-            "特徴量設計や前処理の見直しも有効ですが、まずはサンプル数の底上げを優先してください。",
-            "少量データで無理に最適化するより、追加データ取得後に複数モデルを比較した方が再現性が出やすいです。",
+          notes: [],
+        },
+        toughLuck: {
+          title: "公式チャートでは対象外です",
+          badge: "tough luck",
+          summary:
+            "この条件では、公式 chart に直接つながる推定器候補がありません。",
+          cards: [
+            {
+              name: "tough luck",
+              reason: "問題設定を見直すか、別の手法を個別に検討する必要があります。",
+            },
           ],
+          notes: [],
         },
         classificationText: {
-          title: "テキスト分類の初期候補",
+          title: "テキスト分類",
           badge: "教師あり / 分類",
           summary:
-            "まず試しやすい候補です。",
+            "公式 chart に出てくる候補です。",
           cards: [
-            { name: "Naive Bayes", reason: "テキスト分類の強いベースラインになりやすく、軽量です。" },
-            { name: "Linear SVC", reason: "高次元テキストでも安定した性能を出しやすい線形分類器です。" },
-            { name: "SGDClassifier", reason: "サンプルが多い場合でも計算効率を確保しやすい選択肢です。" },
+            { name: "Naive Bayes", reason: "最初に試す候補です。" },
+            { name: "Linear SVC", reason: "うまくいかなければ次に試す候補です。" },
+            { name: "SGDClassifier", reason: "さらに次の候補です。" },
           ],
-          notes: [
-            "BoW や TF-IDF と組み合わせて比較するのが実務上の定番です。",
-            "テキスト分類ではまず 2〜3 モデルを同一前処理で並べて評価してください。",
-          ],
+          notes: [],
         },
         classificationSmall: {
-          title: "小〜中規模の分類候補",
+          title: "分類",
           badge: "分類 / 10万件未満",
           summary:
-            "比較しやすい候補をまとめています。",
+            "公式 chart に出てくる候補です。",
           cards: [
-            { name: "SVC", reason: "中規模データで強力なベースラインになりやすい分類器です。" },
-            { name: "KNeighborsClassifier", reason: "局所構造が効く問題で有効なことがあります。" },
-            { name: "Ensemble Classifiers", reason: "非線形関係を拾いやすく、汎用性があります。" },
-            { name: "Linear SVC", reason: "高速で安定した線形ベースラインとして使いやすいです。" },
-            { name: "Naive Bayes", reason: "特徴が条件付き独立に近い場合や軽量比較用に向いています。" },
+            { name: "KNeighborsClassifier", reason: "最初に試す候補です。" },
+            { name: "SVC", reason: "うまくいかなければ次に試す候補です。" },
+            { name: "Ensemble Classifiers", reason: "さらに次の候補です。" },
           ],
-          notes: [
-            "SVM、k近傍法、線形系は標準化の影響が大きいので、前処理をセットで比較してください。",
-            "実務では RandomForest 系や LogisticRegression 系もベースラインに加えると判断しやすくなります。",
-          ],
+          notes: [],
         },
         classificationLarge: {
-          title: "大規模分類の候補",
+          title: "大規模分類",
           badge: "分類 / 10万件以上",
           summary:
-            "大規模データで試しやすい候補です。",
+            "公式 chart に出てくる候補です。",
           cards: [
-            { name: "SGDClassifier", reason: "大規模データに対応しやすく、学習コストを抑えやすいです。" },
-            { name: "Linear SVC", reason: "線形境界で十分な場合の強いベースラインです。" },
+            { name: "Linear SVC", reason: "最初に試す候補です。" },
+            { name: "SGDClassifier", reason: "うまくいかなければ次に試す候補です。" },
+            { name: "Kernel Approximation", reason: "さらに次の候補です。" },
           ],
-          notes: [
-            "特徴量数が多い場合でも扱いやすいため、まずこの 2 つから比較を始めるのが現実的です。",
-            "評価指標の偏りがあるときは class_weight やしきい値調整も検討してください。",
-          ],
+          notes: [],
         },
         regressionSparse: {
-          title: "重要特徴が少なそうな回帰",
-          badge: "回帰 / 特徴量を絞りたい",
+          title: "回帰",
+          badge: "回帰 / 重要特徴が少ない",
           summary:
-            "特徴量を絞り込みやすい候補です。",
+            "公式 chart に出てくる候補です。",
           cards: [
-            { name: "Lasso", reason: "不要な特徴量を 0 に寄せやすく、特徴選択的に働きます。" },
-            { name: "ElasticNet", reason: "相関した特徴量があるときも安定しやすい折衷案です。" },
+            { name: "Lasso", reason: "最初に試す候補です。" },
+            { name: "ElasticNet", reason: "うまくいかなければ次に試す候補です。" },
           ],
-          notes: [
-            "特徴量選択の解釈も欲しい場合に特に相性が良い分岐です。",
-            "標準化を入れずに係数解釈をすると比較が歪みやすい点に注意してください。",
-          ],
+          notes: [],
         },
         regressionSmall: {
-          title: "一般的な回帰の候補",
+          title: "回帰",
           badge: "回帰 / 10万件未満",
           summary:
-            "まず比較しやすい候補です。",
+            "公式 chart に出てくる候補です。",
           cards: [
-            { name: "RidgeRegression", reason: "まず線形回帰系の安定した基準点として置きやすいです。" },
-            { name: 'SVR (kernel="linear")', reason: "線形だが margin ベースで解きたい場合の候補です。" },
-            { name: 'SVR (kernel="rbf")', reason: "非線形性がありそうなときの代表候補です。" },
-            { name: "Ensemble Regressors", reason: "複雑な非線形関係を拾いやすい回帰候補です。" },
+            { name: "RidgeRegression", reason: "最初に試す候補です。" },
+            { name: 'SVR (kernel="linear")', reason: "うまくいかなければ次に試す候補です。" },
+            { name: 'SVR (kernel="rbf")', reason: "さらに次の候補です。" },
+            { name: "Ensemble Regressors", reason: "最後の候補です。" },
           ],
-          notes: [
-            "まず Ridge を置いて、そこから非線形候補を追加すると比較軸が明確になります。",
-            "実務では RandomForestRegressor や GradientBoosting 系も同列で試すと判断しやすいです。",
-          ],
+          notes: [],
         },
         regressionLarge: {
-          title: "大規模回帰の候補",
+          title: "大規模回帰",
           badge: "回帰 / 10万件以上",
           summary:
-            "大規模データ向けの候補です。",
+            "公式 chart に出てくる候補です。",
           cards: [
-            { name: "SGDRegressor", reason: "大規模データでも学習しやすいオンライン寄りの回帰器です。" },
+            { name: "SGDRegressor", reason: "最初に試す候補です。" },
           ],
-          notes: [
-            "学習率や正則化の影響を受けやすいため、標準化と検証セットは必須です。",
-            "完全な最終候補ではなく、大規模データ向けの初期ベースラインとして扱ってください。",
-          ],
+          notes: [],
         },
         clusteringKnownSmall: {
-          title: "クラスター数が分かるクラスタリング",
+          title: "クラスタリング",
           badge: "クラスタリング / 既知 / 1万件未満",
           summary:
-            "まず試しやすい候補です。",
+            "公式 chart に出てくる候補です。",
           cards: [
-            { name: "KMeans", reason: "クラスター数が決まっている場合の標準的な出発点です。" },
+            { name: "KMeans", reason: "最初に試す候補です。" },
           ],
-          notes: [
-            "特徴量スケールの影響を受けやすいので、距離ベースで使う前に標準化を検討してください。",
-            "初期値依存を避けるため、複数回初期化で安定性を確認すると良いです。",
-          ],
+          notes: [],
         },
         clusteringKnownLarge: {
           title: "大規模クラスタリング",
           badge: "クラスタリング / 既知 / 1万件以上",
           summary:
-            "大規模データ向けの候補です。",
+            "公式 chart に出てくる候補です。",
           cards: [
-            { name: "MiniBatch KMeans", reason: "サンプル数が多い状況でもスケールしやすい近似版です。" },
-            { name: "KMeans", reason: "精度比較用の基準として、一部サンプルで試す価値があります。" },
+            { name: "MiniBatch KMeans", reason: "最初に試す候補です。" },
           ],
-          notes: [
-            "速度重視の分岐なので、最終的にはクラスタ品質指標と可視化で確認してください。",
-            "大規模でも特徴空間が粗い場合は、前処理や次元削減の併用が効きます。",
-          ],
+          notes: [],
         },
         clusteringUnknownSmall: {
-          title: "クラスター数が未知の候補",
+          title: "クラスタリング",
           badge: "クラスタリング / 未知 / 1万件未満",
           summary:
-            "複数の見方で試しやすい候補です。",
+            "公式 chart に出てくる候補です。",
           cards: [
-            { name: "MeanShift", reason: "クラスター数を事前指定せずに密度ベースで探れます。" },
-            { name: "Spectral Clustering", reason: "非球状の構造を拾いたい場合に候補になります。" },
-            { name: "Gaussian Mixture Model", reason: "確率分布としてクラスターを表現したい場合に向いています。" },
+            { name: "Spectral Clustering", reason: "最初に試す候補です。" },
+            { name: "Gaussian Mixture Model", reason: "うまくいかなければ次に試す候補です。" },
+            { name: "MeanShift", reason: "さらに次の候補です。" },
+            { name: "VBGMM", reason: "最後の候補です。" },
           ],
-          notes: [
-            "この分岐は手法ごとの仮定差が大きいので、可視化や内部評価指標の確認が重要です。",
-            "1万件未満でも計算負荷が高くなりやすいため、まず部分集合で挙動を見るのが安全です。",
-          ],
+          notes: [],
         },
         clusteringUnknownLarge: {
-          title: "大規模でクラスター数未知",
+          title: "クラスタリング",
           badge: "クラスタリング / 未知 / 1万件以上",
           summary:
-            "大規模データでの出発点になる候補です。",
+            "公式 chart では明示的な候補がありません。",
           cards: [
-            { name: "MiniBatch KMeans", reason: "候補数を仮置きして大規模データを探索する現実的な入口です。" },
-            { name: "Gaussian Mixture Model", reason: "サンプルや特徴量を絞って分布仮定を確認する補助候補です。" },
+            { name: "tough luck", reason: "公式 chart ではこの条件に直接つながる推定器候補がありません。" },
           ],
-          notes: [
-            "クラスター数未知かつ大規模では、厳密な一発解より探索的な比較手順が必要です。",
-            "候補数を変えながら silhouette score などであたりを付ける運用が現実的です。",
-          ],
+          notes: [],
         },
-        dimensionalityReduction: {
-          title: "次元削減の候補",
+        dimensionalityReductionSmall: {
+          title: "次元削減",
           badge: "教師なし / 次元削減",
           summary:
-            "圧縮や可視化で使いやすい候補です。",
+            "公式 chart に出てくる候補です。",
           cards: [
-            { name: "Randomized PCA", reason: "まず標準的に圧縮したいときの入口です。" },
-            { name: "LLE", reason: "局所的な非線形構造を保ちながら埋め込みたい場合に向きます。" },
-            { name: "Isomap", reason: "測地距離ベースで低次元構造を見たい場合の候補です。" },
-            { name: "Spectral Embedding", reason: "グラフ構造として近傍関係を反映したい場合に使えます。" },
+            { name: "Randomized PCA", reason: "最初に試す候補です。" },
+            { name: "LLE", reason: "うまくいかなければ次に試す候補です。" },
+            { name: "Isomap", reason: "さらに次の候補です。" },
+            { name: "Spectral Embedding", reason: "最後の候補です。" },
+          ],
+          notes: [],
+        },
+        dimensionalityReductionLarge: {
+          title: "次元削減",
+          badge: "教師なし / 次元削減 / 1万件以上",
+          summary:
+            "公式 chart に出てくる候補です。",
+          cards: [
+            { name: "Randomized PCA", reason: "最初に試す候補です。" },
             { name: "Kernel Approximation", reason: "大規模でカーネル法を軽く近似したいときの補助候補です。" },
           ],
-          notes: [
-            "まず無難に始めるなら PCA 系、その後に非線形構造が重要かを検証する流れが扱いやすいです。",
-            "可視化目的と下流タスクの前処理目的では、良い埋め込みの条件が変わる点に注意してください。",
-          ],
+          notes: [],
         },
       };
 
@@ -674,26 +617,26 @@
           text: "サンプル数は 50 件を超えていますか？",
           help: "あてはまる方を選んでください。",
           options: [
-            { label: "50件を超える", detail: "", next: "labeled" },
+            { label: "50件を超える", detail: "", next: "predictCategory" },
             { label: "50件以下", detail: "", result: "needMoreData" },
           ],
         },
-        labeled: {
+        predictCategory: {
           label: "Q2",
+          text: "カテゴリを予測したいですか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "はい", detail: "", next: "labeledForClassification" },
+            { label: "いいえ", detail: "", next: "predictQuantity" },
+          ],
+        },
+        labeledForClassification: {
+          label: "Q3",
           text: "ラベル付きデータはありますか？",
           help: "あてはまる方を選んでください。",
           options: [
-            { label: "ある", detail: "", next: "supervisedType" },
-            { label: "ない", detail: "", next: "unsupervisedGoal" },
-          ],
-        },
-        supervisedType: {
-          label: "Q3",
-          text: "予測したいのはカテゴリですか、それとも数値ですか？",
-          help: "目的に近い方を選んでください。",
-          options: [
-            { label: "カテゴリを予測したい", detail: "", next: "classificationText" },
-            { label: "数値を予測したい", detail: "", next: "regressionSparse" },
+            { label: "ある", detail: "", next: "classificationText" },
+            { label: "ない", detail: "", result: "toughLuck" },
           ],
         },
         classificationText: {
@@ -714,8 +657,26 @@
             { label: "10万件以上", detail: "", result: "classificationLarge" },
           ],
         },
-        regressionSparse: {
+        predictQuantity: {
+          label: "Q3",
+          text: "数値を予測したいですか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "はい", detail: "", next: "labeledForRegression" },
+            { label: "いいえ", detail: "", next: "justLooking" },
+          ],
+        },
+        labeledForRegression: {
           label: "Q4",
+          text: "ラベル付きデータはありますか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "ある", detail: "", next: "regressionSparse" },
+            { label: "ない", detail: "", result: "toughLuck" },
+          ],
+        },
+        regressionSparse: {
+          label: "Q5",
           text: "重要な特徴量は少なそうですか？",
           help: "あてはまる方を選んでください。",
           options: [
@@ -724,7 +685,7 @@
           ],
         },
         regressionScale: {
-          label: "Q5",
+          label: "Q6",
           text: "サンプル数は 10万件 未満ですか？",
           help: "あてはまる方を選んでください。",
           options: [
@@ -732,17 +693,26 @@
             { label: "10万件以上", detail: "", result: "regressionLarge" },
           ],
         },
-        unsupervisedGoal: {
-          label: "Q3",
-          text: "やりたいのは構造発見ですか、それとも圧縮・可視化ですか？",
-          help: "目的に近い方を選んでください。",
+        predictingStructure: {
+          label: "Q4",
+          text: "構造を予測したいですか？",
+          help: "あてはまる方を選んでください。",
           options: [
-            { label: "構造を見つけたい", detail: "", next: "clusterCountKnown" },
-            { label: "圧縮・可視化したい", detail: "", result: "dimensionalityReduction" },
+            { label: "はい", detail: "", next: "clusterCountKnown" },
+            { label: "いいえ", detail: "", next: "justLooking" },
+          ],
+        },
+        justLooking: {
+          label: "Q5",
+          text: "可視化や観察が目的ですか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "はい", detail: "", next: "dimensionalityScale" },
+            { label: "いいえ", detail: "", result: "toughLuck" },
           ],
         },
         clusterCountKnown: {
-          label: "Q4",
+          label: "Q5",
           text: "クラスター数は分かっていますか？",
           help: "あてはまる方を選んでください。",
           options: [
@@ -751,7 +721,7 @@
           ],
         },
         clusterKnownScale: {
-          label: "Q5",
+          label: "Q6",
           text: "サンプル数は 1万件 未満ですか？",
           help: "あてはまる方を選んでください。",
           options: [
@@ -760,12 +730,21 @@
           ],
         },
         clusterUnknownScale: {
-          label: "Q5",
+          label: "Q6",
           text: "サンプル数は 1万件 未満ですか？",
           help: "あてはまる方を選んでください。",
           options: [
             { label: "1万件未満", detail: "", result: "clusteringUnknownSmall" },
             { label: "1万件以上", detail: "", result: "clusteringUnknownLarge" },
+          ],
+        },
+        dimensionalityScale: {
+          label: "Q6",
+          text: "サンプル数は 1万件 未満ですか？",
+          help: "あてはまる方を選んでください。",
+          options: [
+            { label: "1万件未満", detail: "", result: "dimensionalityReductionSmall" },
+            { label: "1万件以上", detail: "", result: "dimensionalityReductionLarge" },
           ],
         },
       };
@@ -790,16 +769,12 @@
       const codeTitleEl = document.getElementById("code-title");
       const codeSubtitleEl = document.getElementById("code-subtitle");
       const codeBodyEl = document.getElementById("code-body");
-      const progressTextEl = document.getElementById("progress-text");
-      const progressValueEl = document.getElementById("progress-value");
       const questionStepEl = document.getElementById("question-step");
 
       const state = {
         currentNode: "samples",
         history: [],
       };
-
-      const totalSteps = 5;
 
       const codeSnippets = {
           "Naive Bayes": `from sklearn.pipeline import make_pipeline
@@ -963,6 +938,13 @@ model = GaussianMixture(
     random_state=42
 )
 labels = model.fit_predict(X)`,
+          VBGMM: `from sklearn.mixture import BayesianGaussianMixture
+
+model = BayesianGaussianMixture(
+    n_components=10,
+    random_state=42
+)
+labels = model.fit_predict(X)`,
           "Randomized PCA": `from sklearn.decomposition import PCA
 
 model = PCA(
@@ -1043,13 +1025,6 @@ pred = model.predict(X_valid)`,
         });
 
         backButton.disabled = state.history.length === 0;
-        renderProgress();
-      }
-
-      function renderProgress() {
-        const current = Math.min(state.history.length + 1, totalSteps);
-        progressTextEl.textContent = `質問 ${current} / ${totalSteps}`;
-        progressValueEl.style.width = `${(current / totalSteps) * 100}%`;
       }
 
       function renderResult(resultId) {
